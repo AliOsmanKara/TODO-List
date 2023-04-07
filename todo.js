@@ -47,11 +47,23 @@ function filterTodos(e) {
 function checkTodo(e) {
 
     if (e.target.classList.contains("checked-item")) {
-        e.target.closest("li").style.textDecoration = "line-through";
-        showAlert("success", "Todo Başarıyla Bitirildi...");
-    } else {
-        e.target.closest("li").style.textDecoration = "none";
+        const todos = JSON.parse(localStorage.getItem("todos"));
+        todos.forEach(function (todo) {
+            if (e.target.closest("li").textContent === todo.name) {
+                todo.status = !todo.status
+            }
+        })
+        localStorage.setItem("todos", JSON.stringify(todos));
+
+        if (e.target.checked) {
+            e.target.closest("li").style.textDecoration = "line-through";
+            showAlert("success", "Todo Başarıyla Bitirildi...");
+        }
+        else {
+            e.target.closest("li").style.textDecoration = "none";
+        }
     }
+
 
 }
 
@@ -78,19 +90,22 @@ function loadAllTodosToUI() {
     let todos = getTodosFromStorage();
 
     todos.forEach(function (todo) {
-        addTodoToUI(todo);
+        addTodoToUI(todo.name, todo.status);
     })
 }
 
 function addTodo(e) {
     e.preventDefault();
-    const newTodo = todoInput.value.trim();
+    const newTodo = {
+        name: todoInput.value.trim(),
+        status: false
+    }
 
-    if (newTodo === "") {
+    if (newTodo.name === "") {
         showAlert("danger", "Lütfen Bir Todo Girin");
     }
     else {
-        addTodoToUI(newTodo);
+        addTodoToUI(newTodo.name, false);
         addTodoToStorage(newTodo);
         showAlert("success", "Todo Başarıyla Eklendi...")
     }
@@ -127,7 +142,7 @@ function showAlert(type, message) {
     }, 1000);
 }
 
-function addTodoToUI(newTodo) {
+function addTodoToUI(newTodo, checked) {
     const listItem = document.createElement("li");
     const linkBar = document.createElement("div");
     const checkInput = document.createElement("input");
@@ -135,7 +150,7 @@ function addTodoToUI(newTodo) {
 
     checkInput.type = "checkbox"
     checkInput.className = "checked-item mr-1"
-
+    checkInput.checked = checked;
 
     link.href = "#";
     link.className = "delete-item";
@@ -149,8 +164,11 @@ function addTodoToUI(newTodo) {
     listItem.appendChild(document.createTextNode(newTodo));
     listItem.appendChild(linkBar);
 
-
+    if (checked) {
+        listItem.style.textDecoration = "line-through";
+    }
 
     todoList.appendChild(listItem);
     todoInput.value = "";
-}
+
+}   
